@@ -13,7 +13,7 @@ class Predictor:
         initial_value = 1/len(self.metrics)
         for metric in self.metrics:
             metric_name = metric.get_name()
-            hyperparameters.update(metric_name, initial_value)
+            hyperparameters.update({metric_name: initial_value})
         return hyperparameters
 
     def change_hyperparameters(self,metric_name,new_value):
@@ -22,7 +22,7 @@ class Predictor:
     def adjust_prediction(self):
         pass
 
-    def max(array):
+    def max(self, array):
         if np.max(array) == np.inf:
             return np.max(array[array < np.inf])
         return np.max(array)
@@ -31,14 +31,14 @@ class Predictor:
         weighted_sum = np.zeros((len(self.database.get_actions()), len(self.database.get_actions())))
         for metric in self.metrics:
             current_metric = metric.get_metric()
-            weighted_sum += self.hyperparameters[metric.get_name()] * current_metric / (max(current_metric) - np.min(current_metric))
+            weighted_sum += self.hyperparameters[metric.get_name()] * current_metric / (self.max(current_metric) - np.min(current_metric))
         self.weighted_result = weighted_sum
 
     def predict_product(self):
         weighted_product = np.ones((len(self.database.get_actions()), len(self.database.get_actions())))
         for metric in self.metrics:
             current_metric = metric.get_metric()
-            weighted_product = weighted_product * (self.hyperparameters[metric.get_name()] * current_metric / (max(current_metric) - np.min(current_metric)))
+            weighted_product = weighted_product * (self.hyperparameters[metric.get_name()] * current_metric / (self.max(current_metric) - np.min(current_metric)))
         self.weighted_result = weighted_product
 
     def sort_results(self):

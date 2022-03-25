@@ -6,10 +6,8 @@ class CSVReader:
         
     def read_data(self, filename, time_string, number_columns, number_rows, separator, timestamp_column):
         data = pd.read_csv(filename, separator, usecols=range(number_columns), nrows=number_rows)
-        n = 0
-        for event in data.values:
+        for n, event in enumerate(data.values):
             data.at[n,data.columns[timestamp_column]] = self.convert_to_seconds(event[timestamp_column], time_string)
-            n = n + 1
         return data
 
 

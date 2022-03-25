@@ -4,22 +4,22 @@ import statistics as stat
 
 
 
-class TimeDistanceStdev(TimeDistance):
+
+class TimeDistanceMedian(TimeDistance):
 
     def __init__(self, database):
         super().__init__(database)
 
     def get_name(self) -> str:
-        return "Stdev"
+        return "Median"
     
-
     def get_metric(self):
         all_times = self.get_time_between_events()
         actions = self.database.get_actions()
-        stdevs = np.zeros((len(actions), len(actions)))
+        medians = np.zeros((len(actions), len(actions)))
         for a1 in range(len(actions)):
             for a2 in range(len(actions)):
                 
-                stdevs[a1, a2] = stat.stdev(all_times[a1][a2]) if len(
+                medians[a1, a2] = stat.median(all_times[a1][a2]) if len(
                     all_times[a1][a2]) > 0 else np.inf
-        return stdevs
+        return medians
