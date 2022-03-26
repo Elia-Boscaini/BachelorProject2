@@ -1,9 +1,11 @@
+import imp
 from csv_reader import CSVReader
 from database import Database
 from log_processor import LogProcessor
 from predictor import Predictor
 from time_distance_median import TimeDistanceMedian
 from time_distance_stdev import TimeDistanceStdev
+from heuristic_miner import HeuristicMiner
 
 def ask_user(event1, event2, distance):
     print("Do you want to abstract:")
@@ -20,18 +22,24 @@ if __name__ == "__main__":
     data = csv_reader.read_data("Data.csv","%Y-%m-%dT%H:%M:%S.%f", 6, 8114, ";", 3)
 
     #Store data on database
-    database = Database(5,0,3)
+    database = Database(5,0,3,"bolt://localhost:7687", "neo4j", "password")
     database.update_latest_log(data)
+    database.initiate_tree()
 
     #Delete repetitions
     log_processor = LogProcessor(database)
     log_processor.delete_repetitions()
 
+    #Initiate Metrics and predictor
     time_distance_stdev = TimeDistanceStdev(database)
     time_distance_median = TimeDistanceMedian(database)
     metrics = [time_distance_median, time_distance_stdev]
     predictor = Predictor(metrics, database)
     
+    #Initiate Heuristic Miner
+    heuristic_miner = HeuristicMiner(database)
+    heuristic_miner.save_process_as_png(0)
+
     #Main Loop
     for level_of_abstraction in range(1, 16):
         stop_abstracting = False
@@ -56,6 +64,9 @@ if __name__ == "__main__":
                 print("Abstracted {} Events".format(nr_events_abstracted))
                 print(f"Now you only have {len(database.get_actions())} actions")
                 print(f"{database.events_deleted_last_abstraction} have been deleted")
+
+                database.update_tree(e1,e2,e1+e2)
+                heuristic_miner.save_process_as_png(level_of_abstraction)
 
                 #rawdata = delete_repetitions(rawdata)
                 #save_process_as_png(rawdata, level_of_abstraction)
