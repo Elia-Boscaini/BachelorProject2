@@ -4,7 +4,7 @@ from neo4j import GraphDatabase
 
 class Database:
 
-    def __init__(self, action_column, trace_column, timestamp_column,uri,user,password):
+    def __init__(self, action_column, trace_column, timestamp_column, uri, user, password):
         self.latest_log = None
         self.level_of_abstraction = -1
         self.action_column = action_column
@@ -48,20 +48,16 @@ class Database:
         self.latest_log = self.latest_log.reset_index(drop=True)
         self.events_deleted_last_abstraction = len(ids_to_delete)
         self.update_latest_log(self.latest_log)
-    
+
     def initiate_tree(self):
         with self.driver.session() as session:
             for action in self.get_actions():
                 session.run("Create (e:Action{name: \""+action+"\"})")
         self.driver.close()
-    
-    def update_tree(self,e1,e2,enew):
+
+    def update_tree(self, e1, e2, enew):
         with self.driver.session() as session:
-                
-                session.run("Create (e:Action{name: \""+enew+"\"})")
-                session.run("MATCH(a:Action),(b:Action),(c:Action) WHERE a.name = \""+e1+"\" AND b.name = \""+e2+"\" AND c.name = \""+enew+"\" CREATE (c)-[r:ABSTRACTS]->(a) CREATE (c)-[r2:ABSTRACTS]->(b) ")
+            session.run("Create (e:Action{name: \""+enew+"\"})")
+            session.run("MATCH(a:Action),(b:Action),(c:Action) WHERE a.name = \""+e1+"\" AND b.name = \"" +
+                        e2+"\" AND c.name = \""+enew+"\" CREATE (c)-[r:ABSTRACTS]->(a) CREATE (c)-[r2:ABSTRACTS]->(b) ")
         self.driver.close()
-    
-
-            
-

@@ -6,6 +6,8 @@ from predictor import Predictor
 from time_distance_median import TimeDistanceMedian
 from time_distance_stdev import TimeDistanceStdev
 from heuristic_miner import HeuristicMiner
+from directly_follows import DirectlyFollowsMetric
+
 
 def ask_user(event1, event2, distance):
     print("Do you want to abstract:")
@@ -19,28 +21,31 @@ if __name__ == "__main__":
 
     #Read in csv
     csv_reader = CSVReader()
-    data = csv_reader.read_data("Data.csv","%Y-%m-%dT%H:%M:%S.%f", 6, 8114, ";", 3)
+    data = csv_reader.read_data(
+        "Data.csv", "%Y-%m-%dT%H:%M:%S.%f", 6, 8114, ";", 3)
 
-    #Store data on database
-    database = Database(5,0,3,"bolt://localhost:7687", "neo4j", "password")
+    # Store data on database
+    database = Database(5, 0, 3, "bolt://localhost:7687", "neo4j", "password")
     database.update_latest_log(data)
     database.initiate_tree()
 
-    #Delete repetitions
+    # Delete repetitions
     log_processor = LogProcessor(database)
     log_processor.delete_repetitions()
 
-    #Initiate Metrics and predictor
+    # Initiate Metrics and predictor
     time_distance_stdev = TimeDistanceStdev(database)
     time_distance_median = TimeDistanceMedian(database)
-    metrics = [time_distance_median, time_distance_stdev]
+    directly_follows = DirectlyFollowsMetric(database, True)
+    metrics = [directly_follows,time_distance_median,time_distance_stdev]
+
     predictor = Predictor(metrics, database)
-    
-    #Initiate Heuristic Miner
+
+    # Initiate Heuristic Miner
     heuristic_miner = HeuristicMiner(database)
     heuristic_miner.save_process_as_png(0)
 
-    #Main Loop
+    # Main Loop
     for level_of_abstraction in range(1, 16):
         stop_abstracting = False
         predictor.predict_sum()
@@ -57,22 +62,25 @@ if __name__ == "__main__":
                 """tree_string = build_abstraction_tree(
                     e1, e2, level_of_abstraction, tree_string)"""
 
-                nr_events_abstracted = log_processor.abstract_log(e1,e2,e1+e2)
+                nr_events_abstracted = log_processor.abstract_log(
+                    e1, e2, e1+e2)
                 log_processor.delete_repetitions()
                 #rawdata, nr_events_abstracted, set_of_actions = abstract_log(e1, e2, e1 + e2, rawdata)
 
                 print("Abstracted {} Events".format(nr_events_abstracted))
-                print(f"Now you only have {len(database.get_actions())} actions")
-                print(f"{database.events_deleted_last_abstraction} have been deleted")
+                print(
+                    f"Now you only have {len(database.get_actions())} actions")
+                print(
+                    f"{database.events_deleted_last_abstraction} have been deleted")
 
-                database.update_tree(e1,e2,e1+e2)
+                database.update_tree(e1, e2, e1+e2)
                 heuristic_miner.save_process_as_png(level_of_abstraction)
 
                 #rawdata = delete_repetitions(rawdata)
                 #save_process_as_png(rawdata, level_of_abstraction)
                 #save_abstraction_as_csv(rawdata, level_of_abstraction)
 
-                #generate_tree(tree_string)
+                # generate_tree(tree_string)
                 break
             elif answer == "Stop":
                 stop_abstracting = True
