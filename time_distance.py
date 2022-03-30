@@ -14,7 +14,7 @@ class TimeDistance(Metric):
 
         time_between_events = [[[] for i in range(len(set_of_actions))] for j in range(len(set_of_actions))]
 
-        for trace in range(1, self.database.get_number_of_traces() + 1): #Depends on whether the traces start from index 0 or index 1
+        for trace in self.database.get_traces(): 
             timestamps_of_previous_events = {}
             for event in rawdata[rawdata[rawdata.columns[self.database.get_trace_column()]] == trace].values:
                 current_action = event[self.database.get_action_column()]

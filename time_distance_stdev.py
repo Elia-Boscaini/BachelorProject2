@@ -20,6 +20,7 @@ class TimeDistanceStdev(TimeDistance):
         for a1 in range(len(actions)):
             for a2 in range(len(actions)):
                 
-                stdevs[a1, a2] = stat.stdev(all_times[a1][a2]) if len(
-                    all_times[a1][a2]) > 0 else np.inf
+                if len(all_times[a1][a2]) > 1:
+                    stdevs[a1, a2] = stat.stdev(all_times[a1][a2]) 
+                else: stdevs[a1, a2] = np.inf
         return stdevs

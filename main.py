@@ -11,40 +11,48 @@ from directly_follows import DirectlyFollowsMetric
 
 def ask_user(event1, event2, distance):
     print("Do you want to abstract:")
-    print(event1 + "-" + event2)
+    print(event1 + " AND " + event2)
     print("The time distance between them is:")
     print(distance)
     return input(" Type Yes or No or Stop")
 
 
+
 if __name__ == "__main__":
 
     #Read in csv
+    first_log = True
     csv_reader = CSVReader()
-    data = csv_reader.read_data(
-        "Data.csv", "%Y-%m-%dT%H:%M:%S.%f", 6, 8114, ";", 3)
-
-    # Store data on database
-    database = Database(5, 0, 3, "bolt://localhost:7687", "neo4j", "password")
+    if first_log:
+        data = csv_reader.read_data(
+            "Data.csv", "%Y-%m-%dT%H:%M:%S.%f",  6, 8114, ";", 3, 26)
+        # Store data on database
+        database = Database(5, 0, 3, "bolt://localhost:7687", "neo4j", "password")
+    else:
+        data = csv_reader.read_data(
+            "C:\\Users\\39327\\Downloads\\BPI2016_Clicks_NOT_Logged_In.csv", "%Y-%m-%d %H:%M:%S", 5, 10000, ";", 2, 18)
+        # Store data on database
+        database = Database(4, 1, 2, "bolt://localhost:7687", "neo4j", "password")
+    
     database.update_latest_log(data)
     database.initiate_tree()
-
+    print(database.get_number_of_traces())
+    print(len(database.get_actions()))
     # Delete repetitions
     log_processor = LogProcessor(database)
     log_processor.delete_repetitions()
-
     # Initiate Metrics and predictor
     time_distance_stdev = TimeDistanceStdev(database)
     time_distance_median = TimeDistanceMedian(database)
-    directly_follows = DirectlyFollowsMetric(database, True)
+    directly_follows = DirectlyFollowsMetric(database, False)
     metrics = [directly_follows,time_distance_median,time_distance_stdev]
-
     predictor = Predictor(metrics, database)
 
     # Initiate Heuristic Miner
     heuristic_miner = HeuristicMiner(database)
     heuristic_miner.save_process_as_png(0)
-
+    print("Initial actions:")
+    print(len(database.get_actions()))
     # Main Loop
     for level_of_abstraction in range(1, 16):
         stop_abstracting = False

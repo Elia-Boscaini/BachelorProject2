@@ -12,6 +12,9 @@ class Database:
         self.timestamp_column = timestamp_column
         self.events_deleted_last_abstraction = 0
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
+        with self.driver.session() as session:
+            session.run("Match (n) Detach Delete (n)")
+
 
     def update_latest_log(self, data):
         if self.level_of_abstraction >= 0:
@@ -19,6 +22,7 @@ class Database:
                 f"abstractions/Abstraction{self.level_of_abstraction}.csv")
         self.latest_log = data
         self.level_of_abstraction += 1
+        self.latest_log = self.latest_log.reset_index(drop=True)
 
     def get_latest_log(self):
         return self.latest_log
@@ -36,8 +40,11 @@ class Database:
         return self.trace_column
 
     def get_number_of_traces(self):
-        n_t = self.latest_log.iloc[-1, self.trace_column]
-        return n_t
+        return len(list(self.latest_log[self.latest_log.columns[self.trace_column]].unique()))
+
+    def get_traces(self):
+        return list(self.latest_log[self.latest_log.columns[self.trace_column]].unique())
+        
 
     def change_event(self, row_number, column_number, new_value):
         self.latest_log.at[row_number,

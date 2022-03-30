@@ -19,7 +19,7 @@ class DirectlyFollowsMetric(Metric):
             (len(set_of_actions), len(set_of_actions)))
 
         # Depends on whether the traces start from index 0 or index 1
-        for trace in range(1, self.database.get_number_of_traces() + 1):
+        for trace in self.database.get_traces():
             previous_action = None
             for event in rawdata[rawdata[rawdata.columns[self.database.get_trace_column()]] == trace].values:
                 current_action = event[self.database.get_action_column()]
@@ -33,11 +33,10 @@ class DirectlyFollowsMetric(Metric):
                 previous_action = current_action
 
         directly_followed_sum = directly_followed_sum / \
-            directly_followed_sum.sum(axis=0)
+            numpy.maximum(directly_followed_sum.sum(axis=0), 1.0e-8)
         # if (not(self.order_matters)):
         #   directly_followed_sum *= 2
 
         directly_followed_sum = 1 - directly_followed_sum
-        print(directly_followed_sum)
 
         return directly_followed_sum
